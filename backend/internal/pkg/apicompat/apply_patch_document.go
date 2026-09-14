@@ -34,15 +34,6 @@ func stripXMLInvoke(raw string) string {
 	return strings.TrimSpace(inner)
 }
 
-func isEndOfFileMarker(trimmed string) bool {
-	switch trimmed {
-	case "*** End of File", "*** End of File ***":
-		return true
-	default:
-		return false
-	}
-}
-
 // normalizeApplyPatchDocument rewrites Grok-style patch envelopes so Codex can
 // parse them. Codex requires the first line to equal "*** Begin Patch" and the
 // last non-empty line to equal "*** End Patch".
@@ -53,25 +44,22 @@ func normalizeApplyPatchDocument(raw string) string {
 	for _, line := range strings.Split(stripped, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if sawEnd {
-			if trimmed == "" || isEndOfFileMarker(trimmed) {
-				continue
-			}
 			continue
 		}
 		if trimmed == "*** End of File ***" {
 			continue
 		}
 		if strings.HasPrefix(trimmed, "*** Begin Patch") {
-			b.WriteString("*** Begin Patch\n")
+			_, _ = b.WriteString("*** Begin Patch\n")
 			continue
 		}
 		if strings.HasPrefix(trimmed, "*** End Patch") {
-			b.WriteString("*** End Patch\n")
+			_, _ = b.WriteString("*** End Patch\n")
 			sawEnd = true
 			continue
 		}
-		b.WriteString(line)
-		b.WriteByte('\n')
+		_, _ = b.WriteString(line)
+		_ = b.WriteByte('\n')
 	}
 	out := b.String()
 	if !strings.Contains(out, "*** End Patch") {
@@ -142,12 +130,12 @@ func applyPatchOperationDocument(operation map[string]any) string {
 	typ := strings.TrimSpace(stringValue(operation["type"]))
 	path := stringValue(operation["path"])
 	var b strings.Builder
-	b.WriteString("*** Begin Patch\n")
+	_, _ = b.WriteString("*** Begin Patch\n")
 	switch typ {
 	case "add_file", "create_file":
-		b.WriteString("*** Add File: ")
-		b.WriteString(path)
-		b.WriteByte('\n')
+		_, _ = b.WriteString("*** Add File: ")
+		_, _ = b.WriteString(path)
+		_ = b.WriteByte('\n')
 		contents := stringValue(operation["contents"])
 		if contents == "" {
 			contents = stringValue(operation["diff"])
@@ -157,28 +145,28 @@ func applyPatchOperationDocument(operation map[string]any) string {
 				continue
 			}
 			if !strings.HasPrefix(line, "+") {
-				b.WriteByte('+')
+				_ = b.WriteByte('+')
 			}
-			b.WriteString(line)
-			b.WriteByte('\n')
+			_, _ = b.WriteString(line)
+			_ = b.WriteByte('\n')
 		}
 	case "delete_file":
-		b.WriteString("*** Delete File: ")
-		b.WriteString(path)
-		b.WriteByte('\n')
+		_, _ = b.WriteString("*** Delete File: ")
+		_, _ = b.WriteString(path)
+		_ = b.WriteByte('\n')
 	default:
-		b.WriteString("*** Update File: ")
-		b.WriteString(path)
-		b.WriteByte('\n')
+		_, _ = b.WriteString("*** Update File: ")
+		_, _ = b.WriteString(path)
+		_ = b.WriteByte('\n')
 		diff := stringValue(operation["diff"])
 		if diff != "" {
-			b.WriteString(diff)
+			_, _ = b.WriteString(diff)
 			if !strings.HasSuffix(diff, "\n") {
-				b.WriteByte('\n')
+				_ = b.WriteByte('\n')
 			}
 		}
 	}
-	b.WriteString("*** End Patch\n")
+	_, _ = b.WriteString("*** End Patch\n")
 	return b.String()
 }
 

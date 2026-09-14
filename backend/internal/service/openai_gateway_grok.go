@@ -1345,10 +1345,6 @@ func grokModelNeedsImageTextBridge(model string) bool {
 	return strings.Contains(model, "composer") || strings.Contains(model, "build")
 }
 
-func isGrokComposerModel(model string) bool {
-	return grokModelNeedsImageTextBridge(model)
-}
-
 func collectGrokComposerImageURLs(reqBody map[string]any) []string {
 	var imageURLs []string
 	appendFromContent := func(content any) {
